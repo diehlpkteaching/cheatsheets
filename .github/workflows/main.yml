@@ -13,3 +13,8 @@ jobs:
           compiler: lualatex
           args:
           extra_system_packages: fonts-noto-color-emoji
+      - name: Upload Spack PDF file
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF
+          path: spack.pdf
