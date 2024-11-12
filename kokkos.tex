@@ -122,6 +122,7 @@ showstringspaces=false
 
 \newcommand{\bash}[1]{\lstinline[language=bash]{#1}}
 \newcommand{\cpp}[1]{\lstinline[language=c++]{#1}}
+\newcommand{\cppsign}{C\texttt{++}~}
 
 \begin{document}
 
@@ -143,11 +144,40 @@ showstringspaces=false
      \Large{\textbf{Kokkos Cheat Sheet}} \\
 \end{center}
 
-\section{Installation}
-
-\section{Initialization}
 \newlength{\MyLen}
 \settowidth{\MyLen}{\texttt{letterpaper}/\texttt{a4paper} \ }
+
+\section{Installation}
+\subsection{Spack}
+\begin{lstlisting}[language=bash,style=mystyle]
+. spack/share/spack/setup-env.sh
+# Install with OpenMP execution space
+spack install kokkos@4.4 +openmp %gcc@12.3.0
+# Build with CUDA and OpenMP execution space
+spack install kokkos +openmp +cuda cuda_arch=90
+\end{lstlisting}
+Note that the \bash{cuda_arch} needs to be updated to the architecture of your Nvidia GPU. You might want to update the Kokkos version to the latest release.
+\subsection{CMake}
+\begin{lstlisting}[language=bash,style=mystyle]
+tar -xvf kokkos-4.4.01.tar.gz
+cd kokkos-4.4.01
+mkdir build
+cd build
+# Build with OpenMP execution space
+cmake -DKokkos_ENABLE_OPENMP=ON ..
+make
+# Build with CUDA execution space
+module load cuda/12.4.1
+cmake -DKokkos_ENABLE_OPENMP=ON \
+	-DKokkos_ENABLE_CUDA=ON \
+	-DKokkos_ARCH_HOPPER90=ON .. 
+make
+\end{lstlisting}
+Note that the CMake option \bash{Kokkos_ARCH_HOPPER90=ON} needs to be updated to the architecture of your Nvidia GPU. You can download the latest Kokkos realse
+here \url{https://github.com/kokkos/kokkos/releases}.
+
+\section{Initialization}
+
 \begin{lstlisting}[language=c++,style=mystyle]
 // Initialize Kokkos 
 Kokkos::initialize (argc , argv );
@@ -158,125 +188,90 @@ Kokkos::initialize (argc , argv );
 Kokkos::finalize ();
 \end{lstlisting}
 The header \cpp{#include <Kokkos_Core.hpp>} is required. It is recommend to place all Kokkos code within the curly parentheses. MPI needs to be initialized before Kokkos is initialized.
-
-
-\subsection{Installation}
-\settowidth{\MyLen}{\texttt{multicol} }
-\begin{tabular}{@{}ll@{}}
-\bash{spack info --phased}    &  Build details \\
-\bash{spack install <name>} & Install package <name> \\
-\bash{spack install -j n} & Number of $n$ parallel jobs  \\
-\bash{spack install -v} & Verbose build output \\
-\bash{spack install --no-cache} & Do not use cache \\
-\bash{spack -v} & verbose output \\
-\bash{spack -debug} & Debug output
-\end{tabular}\\
-To install a specific version of the package we use \bash{spack install wget@1.17} and to install a package with a specific compiler we use \bash{spack install wget \%gcc@12.2.0}. To specify the version and the compiler, we use \bash{spack install wget@1.17 \%gcc@13.2.0}.
-
-\subsection{Loading and deleting packages}
-\settowidth{\MyLen}{\texttt{multicol} }
-\begin{tabular}{@{}ll@{}}
-\bash{spack load <name>}    &  Load package <name> \\
-\bash{spack load <name>@<version>} & Load package by <version> \\
-\bash{spack load  /<hash>} & load package by <hash>  \\
-\bash{spack info <name>} & List available versions \\ 
-\bash{spack list <name>} & List packages \\ 
-\bash{spack delte <name>} & Delete package \\ 
-\bash{spack gc} & Garbage collection \\ 
-\end{tabular}
-
-\subsection{Adding compilers}
-\settowidth{\MyLen}{\texttt{multicol} }
-\begin{tabular}{@{}ll@{}}
-\bash{spack compilers} & List all compilers \\ 
-\bash{spack compiler find} & FInd new compilers \\ 
-\bash{spack compiler info <name>} & Shows info 
-\end{tabular} \\
-If your favorite compiler is not available use \bash{spack install gcc@13.2.0}  or install \bash{spack install clang@17} to install it. That takes a while and you might want to get a hot beverage \emoji{coffee}.
-
-\subsection{Adding external packages}
-\settowidth{\MyLen}{\texttt{multicol} }
-\begin{tabular}{@{}ll@{}}
-\bash{spack external find openmpi} & Search for openmp \\ 
-\bash{spack external find mpich} & Search for mpich \\ 
-\bash{spack external find cuda} & Search for CUDA  \\
-\bash{spack external find <name>} & Search for package <name>  \\
-\end{tabular} \\
-You can try to add system packages using \bash{spack external find python} or \bash{external find openssl}. Spack will use these packages and that can reduce the compilation time. 
-
-\subsection{Concretization}
-\settowidth{\MyLen}{\texttt{multicol} }
-\begin{tabular}{@{}ll@{}}
-\bash{spack install kokkos@4.4} & Install version 4.4. \\ 
-\bash{spack install kokkos\%gcc@12} & Compile with gcc 12. \\ 
-\bash{spack install kokkos +openmp} & Compile OpenMP backend \\ 
-\bash{spack install kokkos ~openmp} & Do not compile OpenMP \\ 
-\bash{spack install kokkos ^cuda@12.4.1} & Use CUDA 12.4.1 \\ 
-\end{tabular} \\
-To build Kokkos 4.4  with CUDA support using CUDA 12.4.1 support with gcc 12.2.0 we could use
-\bash{spack install kokkos@4.4 +cuda ^cuda@12.4.1 \%gcc@12.2.0}.
-To list all available variants, we use \bash{spack info <name>}.
-\begin{lstlisting}[language=bash,style=mystyle]
-spack info hdf5
-Variants:
-    cxx [false]                 false, true
-        Enable C++ support
-    fortran [false]             false, true
-        Enable Fortran support
-    mpi [true]                  false, true
-        Enable MPI support
-\end{lstlisting}
-We observe that the package \bash{hdf5}  is build as default
-\bash{spack install hdf5 ~cxx ~fortran +mpi}. The dependencies ($\wedge$ ) are listed as well.
-\begin{lstlisting}[language=bash,style=mystyle]
-Build Dependencies:
-    cmake  gmake  java  mpi  mpich  ninja  szip  zlib-api
-
-Link Dependencies:
-    mpi  mpich  szip  zlib-api
-\end{lstlisting}
-To build the package with a specific version of  CMake we can use \bash{spack install hdf5 ^cmake@3.18}.
-
-\subsection{Environments}
-If a enviroment is activated all packages installed or deleted are related to the environment  and have no effect on other environment or the global spack installation.
-\settowidth{\MyLen}{\texttt{multicol} }
-\begin{tabular}{@{}ll@{}}
-\bash{spack env create <name>} & Create env <name> \\ 
-\bash{spack env activate <name>} & Activate env <name> \\ 
-\bash{spack env deactivate} & Deactivate current env  \\ 
-\bash{spack -e <env> install kokkos} & Install kokkos in env  \\
-\end{tabular} \\
-Create a named environment \emoji{smirk}
-\begin{lstlisting}[language=bash,style=mystyle]
-spack env activate -p foo
-[foo] [diehlpk@darwin-fe1 ~]$ 
-\end{lstlisting}
-Show the activated environment \emoji{thinking}
-\begin{lstlisting}[language=bash,style=mystyle]
-spack env status
-==> In environment foo
+\section{Using Kokkos in CMake}
+\begin{lstlisting}[language=bash,style=mystyle,escapechar=|]
+$ vim CMakeLists.txt
+cmake_minumum_required(VERSION 3.20)
+# We need |\cppsign|since Kokkos is based on |\cppsign|
+project(myKokkosProject CXX)
+find_package (Kokkos REQUIRED)
+add_executable (integration-kokkos integration-kokkos.cpp)
+target_link_libraries (integration-kokkos 
+	PRIVATE Kokkos::kokkos )
 \end{lstlisting}
 
-\subsection{Anonymous environments}
-\begin{lstlisting}[language=bash,style=mystyle]
-# Creating an anonymous environment 
-spack env create --dir my_env
-spack env create ./my_env
-# Activate anonymous environment
-spack env activate ./ my_env
+\section{Parallel algorithms}
+
+\subsection{Parallel for loop}
+
+\begin{lstlisting}[language=c++,style=mystyle]
+size_t n = 1000;
+Kokkos::parallel_for("Name",n, 
+	KOKKOS_LAMBDA (const size_t i){
+         // Code
+     });
 \end{lstlisting}
 
-\subsection{Development builds}
-Spack will install all dependencies and run cmake to configure Kokkos but will not build Kokkos.
-\begin{lstlisting}[language=bash,style=mystyle]
-git clone https://github.com/kokkos/kokkos.git
-cd kokkos
-spack dev-build --fresh --drop-in bash \
-	--until cmake kokkos@4.4 +cuda ^cuda@12.4.1 +openmp
-cd spack-build
-make -j 8
+\subsection{Parallel reduction}
+\begin{lstlisting}[language=c++,style=mystyle]
+double sum = 0;
+Kokkos::parallel_reduce ( "Name" ,n, 
+	KOKKOS_LAMBDA  ( const size_t i , 
+		double & valueToUpdate ) {
+			valueToUpdate = // Do update
+} ,sum );
 \end{lstlisting}
-Note for development build need a specific version and Spack will not use the default one.
+We can use built-in reducers like \cpp{Kokkos::Max<double>(result)} to obtain the maxim value.
+
+\section{Views}
+\begin{lstlisting}[language=c++,style=mystyle]
+size_t n = 1000;
+// Vector
+Kokkos::View<double*> vector("vector",n);
+// Matrix
+Kokkos::View<double**> matrix("matrix",n,n);
+// Tensor
+Kokkos::View<double***> tensor("matrix",n,n,n);
+\end{lstlisting}
+
+\subsection{Memory spaces}
+The memory space is a template argument to a Kokkos view (\cpp{Kokkos::View<double*,Kokkos:HostSpace>}).
+The following views are available:
+\begin{itemize}
+\item \cpp{Kokkos:HostSpace}
+\item \cpp{Kokkos::CudaSpace}
+\item \cpp{Kokkos::SharedSpace}
+\end{itemize}
+Note that the available space depends on the enabled Kokkos options during configuration. We have  \cpp{Kokkos::CudaSpace} because we enabled it.
+
+\subsection{Memory layout}
+\begin{lstlisting}[language=c++,style=mystyle]
+Kokkos::View<double*, Kokkos::LayoutRight, x;
+Kokkos::View<double*, Kokkos::LayoutLeft, y;
+\end{lstlisting}
+Default Layout: \cpp{Kokkos::LayoutLeft} for CudaSpace and \cpp{Kokkos::LayoutRight} for HostSpace.
+\subsection{Sub views}
+
+
+\section{Execution spaces}
+\begin{lstlisting}[language=c++,style=mystyle]
+size_t n = 1000;
+Kokkos::parallel_for("Name",
+	Kokkos::RangePolicy <Kokkos::Cuda>(0 , n ), 
+	KOKKOS_LAMBDA (const size_t i){
+         // Code
+     });
+\end{lstlisting}
+Available execution spaces: \cpp{Kokkos::Cuda}, \cpp{Kokkos::Openmp}, and \cpp{Kokkos::Serial}. The available execution spaces depend on the options set a configuration.
+
+\section{Measure time}
+\begin{lstlisting}[language=c++,style=mystyle]
+// Start the timer
+Kokkos::Timer timer;
+//do work
+// returns the elapsed time in seconds
+std::cout << timer.seconds() << std::endl;
+\end{lstlisting}
 
 For more details about Spack, please head to spack.readthedocs.org.\\
 \rule{0.3\linewidth}{0.25pt}
