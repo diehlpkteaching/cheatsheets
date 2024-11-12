@@ -121,6 +121,7 @@ showstringspaces=false
 % -----------------------------------------------------------------------
 
 \newcommand{\bash}[1]{\lstinline[language=bash]{#1}}
+\newcommand{\cpp}[1]{\lstinline[language=c++]{#1}}
 
 \begin{document}
 
@@ -139,38 +140,24 @@ showstringspaces=false
 \setlength{\columnsep}{2pt}
 
 \begin{center}
-     \Large{\textbf{Spack Cheat Sheet}} \\
+     \Large{\textbf{Kokkos Cheat Sheet}} \\
 \end{center}
 
-\section{Directories}
-\begin{tabular}{@{}ll@{}}
-\bash{$tempdir/$user/spack-stage}    &  Built packages \\
-\bash{$spack/var/spack/cache} & Source files \\
-\bash{$spack/etc/spack/defaults/config.yaml} & Default configuration \\
-\bash{$home/.spack/packages.yaml} & List of compilers \\
-\bash{$home/.spack/packages.yaml} & External packages
-\end{tabular}
-The environment variable \bash{$user} is your username (moniker) and \bash{$tempdir} is the default temporary directory (usually \bash{tmp}. the default temporary directory can be changed by setting \bash{$TMP} pr \bash{$TMPDIR}.\\
-\begin{tabular}{@{}ll@{}}
-\bash{spack clean --stage}    &  Clean compiled \\
-\bash{spack clean -a} & packages \\
-\end{tabular}
+\section{Installation}
 
-
-\subsection{Installation and activation}
+\section{Initialization}
 \newlength{\MyLen}
 \settowidth{\MyLen}{\texttt{letterpaper}/\texttt{a4paper} \ }
-\begin{lstlisting}[language=bash,style=mystyle]
-# Install Spack
-git clone --branch=releases/v0.22 
-	https://github.com/spack/spack.git
-# Activate Spack
-. ./spack/share/spack/setup-env.sh
-# Run spack
-spack
+\begin{lstlisting}[language=c++,style=mystyle]
+// Initialize Kokkos 
+Kokkos::initialize (argc , argv );
+{
+    // Code
+}
+// Shutdown Kokkos
+Kokkos::finalize ();
 \end{lstlisting}
-Please update \bash{v.022} with the latest release number. If you use a different
-shell and not bash change \bash{setup-env.sh} to your favorite bash.
+The header \cpp{#include <Kokkos_Core.hpp>} is required. It is recommend to place all Kokkos code within the curly parentheses. MPI needs to be initialized before Kokkos is initialized.
 
 
 \subsection{Installation}
@@ -294,7 +281,7 @@ Note for development build need a specific version and Spack will not use the de
 For more details about Spack, please head to spack.readthedocs.org.\\
 \rule{0.3\linewidth}{0.25pt}
 \scriptsize\\
-\doclicenseImage[imagewidth=3em] 20\Year\ Patrick Diehl \textit{\gitAbbrevHash} Version 0.1.1
+\doclicenseImage[imagewidth=3em] 20\Year\ Patrick Diehl \textit{\gitAbbrevHash} Version 0.1
 
 
 
