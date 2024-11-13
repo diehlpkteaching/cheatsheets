@@ -221,9 +221,19 @@ Kokkos::parallel_reduce ( "Name" ,n,
 			valueToUpdate = // Do update
 } ,sum );
 \end{lstlisting}
-We can use built-in reducers like \cpp{Kokkos::Max<double>(result)} to obtain the maxim value.
+We can use built-in reducers like \cpp{Kokkos::Max<double>(sum)} to obtain the maximum value.
+
+\subsection{Nested parallelism}
+\begin{lstlisting}[language=c++,style=mystyle]
+Kokkos::parallel_for("Name", 
+	Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, 
+	{n, n})
+ ,KOKKOS_LAMBDA(int64_t i, int64_t j) {
+      // Do work });
+\end{lstlisting}
 
 \section{Views}
+
 \begin{lstlisting}[language=c++,style=mystyle]
 size_t n = 1000;
 // Vector
@@ -250,6 +260,20 @@ Kokkos::View<double*, Kokkos::LayoutRight, x;
 Kokkos::View<double*, Kokkos::LayoutLeft, y;
 \end{lstlisting}
 Default Layout: \cpp{Kokkos::LayoutLeft} for CudaSpace and \cpp{Kokkos::LayoutRight} for HostSpace.
+
+\subsection{Mirror}
+\begin{lstlisting}[language=c++,style=mystyle]
+// Allocate the vectors within CUDA device memory
+Kokkos::View<double*,Kokkos::CudaSpace> x =  Kokkos::View<double*,Kokkos::CudaSpace>("X",n);
+// Generate host views of the vectors
+Kokkos::View<double*,Kokkos::CudaSpace>
+	::HostMirror x_host 
+		= Kokkos::create_mirror_view(x);
+// Fill vectors within the host memory
+// Copy host data to device
+Kokkos::deep_copy(x,x_host);
+\end{lstlisting}
+
 \subsection{Sub views}
 
 
@@ -273,7 +297,7 @@ Kokkos::Timer timer;
 std::cout << timer.seconds() << std::endl;
 \end{lstlisting}
 
-For more details about Spack, please head to spack.readthedocs.org.\\
+For more details about Kokkos, please head to \url{https://kokkos.org/kokkos-core-wiki/}.\\
 \rule{0.3\linewidth}{0.25pt}
 \scriptsize\\
 \doclicenseImage[imagewidth=3em] 20\Year\ Patrick Diehl \textit{\gitAbbrevHash} Version 0.1
