@@ -173,7 +173,7 @@ cmake -DKokkos_ENABLE_OPENMP=ON \
 	-DKokkos_ARCH_HOPPER90=ON .. 
 make
 \end{lstlisting}
-Note that the CMake option \bash{Kokkos_ARCH_HOPPER90=ON} needs to be updated to the architecture of your Nvidia GPU. You can download the latest Kokkos realse
+Note that the CMake option \bash{Kokkos_ARCH_HOPPER90=ON} needs to be updated to the architecture of your NVIDIA GPU. You can download the latest Kokkos release
 here \url{https://github.com/kokkos/kokkos/releases}.
 
 \section{Initialization}
@@ -337,7 +337,7 @@ Kokkos::View < double *, Kokkos::HostSpace >
 // Allocate the memory
 size_t n = 10000;
 size_t m = 100000;
-// Get size of scratch memeory
+// Get size of scratch memory
 int scratch_size =
 Kokkos::View <double**>
 	::required_allocation_size(n , m);
