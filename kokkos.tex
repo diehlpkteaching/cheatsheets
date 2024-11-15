@@ -231,7 +231,7 @@ Kokkos::parallel_for("Name",
  ,KOKKOS_LAMBDA(int64_t i, int64_t j) {
       // Do work });
 \end{lstlisting}
-
+Note you can have range policies up to six dimensions with Kokkos 4.
 \section{Views}
 
 \begin{lstlisting}[language=c++,style=mystyle]
@@ -262,6 +262,7 @@ Kokkos::View<double*, Kokkos::LayoutLeft, y;
 Default Layout: \cpp{Kokkos::LayoutLeft} for CudaSpace and \cpp{Kokkos::LayoutRight} for HostSpace.
 
 \subsection{Mirror}
+\subsubsection{Device to Host}
 \begin{lstlisting}[language=c++,style=mystyle]
 // Allocate the vectors within CUDA device memory
 Kokkos::View<double*,Kokkos::CudaSpace> x =  Kokkos::View<double*,Kokkos::CudaSpace>("X",n);
@@ -274,8 +275,30 @@ Kokkos::View<double*,Kokkos::CudaSpace>
 Kokkos::deep_copy(x,x_host);
 \end{lstlisting}
 
-\subsection{Sub views}
+\subsubsection{Host to device}
+\begin{lstlisting}[language=c++,style=mystyle]
+// Create the mirror view
+Kokkos::View<double*, Kokkos::HostSpace> 
+	x_h("x_h",10000);
+auto x = 
+Kokkos::create_mirror_view(Kokkos::CudaSpace,x_h);
+// Copy the data
+Kokkos::deep_copy(x, x_h);
+\end{lstlisting} 
+To combine the creation of the mirror and the deep copy, one can use \texttt{Kokkos::create\_mirror\_view\_and\_copy ( Kokkos::CudaSpace, x\_h );}.
 
+\subsection{Sub views}
+\begin{lstlisting}[language=c++,style=mystyle]
+Kokkos::View< double*** > t ( "T" , n , n , n);
+auto slice = 
+Kokkos::subview (T ,1,Kokkos::ALL,Kokkos::ALL);
+\end{lstlisting} 
+
+\begin{lstlisting}[language=c++,style=mystyle]
+Kokkos::View< double** > t ( "T" , n , n  );
+auto slice = 
+Kokkos::subview (T ,0,Kokkos::make_pair(1,3));
+\end{lstlisting} 
 
 \section{Execution spaces}
 \begin{lstlisting}[language=c++,style=mystyle]
@@ -288,6 +311,9 @@ Kokkos::parallel_for("Name",
 \end{lstlisting}
 Available execution spaces: \cpp{Kokkos::Cuda}, \cpp{Kokkos::Openmp}, and \cpp{Kokkos::Serial}. The available execution spaces depend on the options set a configuration.
 
+
+\newpage
+
 \section{Measure time}
 \begin{lstlisting}[language=c++,style=mystyle]
 // Start the timer
@@ -296,6 +322,65 @@ Kokkos::Timer timer;
 // returns the elapsed time in seconds
 std::cout << timer.seconds() << std::endl;
 \end{lstlisting}
+
+\section{Unmanaged memory}
+\begin{lstlisting}[language=c++,style=mystyle]
+std::vector<double> data(1000);
+// Generate unmanned views from std::vector
+Kokkos::View < double *, Kokkos::HostSpace > 
+	x_h ( data.data(), data.size());
+\end{lstlisting} 
+
+\section{Scratch allocations}
+
+\begin{lstlisting}[language=c++,style=mystyle]
+// Allocate the memory
+size_t n = 10000;
+size_t m = 100000;
+// Get size of scratch memeory
+int scratch_size =
+Kokkos::View <double**>
+	::required_allocation_size(n , m);
+// Allocate the memory
+void * scratch =
+	Kokkos::kokkos_malloc < >("Scratch" ,  scratch_size );
+// Generate the views
+Kokkos::View <double**> a_scr (scratch , n , m );
+Kokkos::View <int*> b_scr (scratch , n );
+\end{lstlisting}
+
+\section{Atomic operations}
+
+\begin{lstlisting}[language=c++,style=mystyle]
+Kokkos::View<int*> sum("Sum", 1);
+double x = 1;
+
+// Parallel search
+Kokkos::parallel_for("Search", n, 
+	KOKKOS_LAMBDA(int64_t i) {
+			if (v(i) == x) 
+				Kokkos::atomic_add(&sum(0), 1);
+});
+std::cout << sum(0) << std::endl;
+\end{lstlisting} 
+Note that is just a showcase and should not be implemented like this.
+
+\section{Memory traits}
+\begin{itemize}
+\item \cpp{Kokkos::MemoryTraits<Kokkos::Atomic>} -- All access to the view will be atomic.
+ \item \cpp{Kokkos::MemoryTraits<Kokkos::RandomAccess>} -- Fast random access to read only memory on the GPU. Originally, used for textures in graphic programming.  
+ \item \cpp{Kokkos::MemoryTraits<Kokkos::Unmanaged>} -- Convert a raw pointer to a Kokkos view
+ \begin{lstlisting}[language=c++,style=mystyle]
+const size_t n = 10000 ;
+double* x_raw = malloc(n*sizeof (double));
+// Unmanned view (No Label and 
+// Kokkos does not deallocate the view)
+Kokkos::View<double*, Kokkos::HostSpace, 
+	Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+    x_view (x_raw, n);
+free (x_raw);
+\end{lstlisting} 
+ \end{itemize}
 
 For more details about Kokkos, please head to \url{https://kokkos.org/kokkos-core-wiki/}.\\
 \rule{0.3\linewidth}{0.25pt}
