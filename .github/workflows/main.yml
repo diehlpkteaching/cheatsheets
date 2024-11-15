@@ -16,7 +16,7 @@ jobs:
       - name: Upload Spack PDF file
         uses: actions/upload-artifact@v4
         with:
-          name: PDF
+          name: PDF-Spack
           path: spack.pdf
       - name: Compile kokkos.tex
         uses: dante-ev/latex-action@latest
@@ -25,3 +25,8 @@ jobs:
           compiler: lualatex
           args:
           extra_system_packages: fonts-noto-color-emoji
+      - name: Upload Kokkos PDF file
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF-Kokkos
+          path: kokkos.pdf
