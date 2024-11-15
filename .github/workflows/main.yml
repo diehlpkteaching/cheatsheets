@@ -18,3 +18,10 @@ jobs:
         with:
           name: PDF
           path: spack.pdf
+      - name: Compile kokkos.tex
+        uses: dante-ev/latex-action@latest
+        with:
+          root_file: kokkos.tex
+          compiler: lualatex
+          args:
+          extra_system_packages: fonts-noto-color-emoji
