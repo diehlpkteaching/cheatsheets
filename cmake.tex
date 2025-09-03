@@ -4,7 +4,6 @@
 \usepackage{ifthen}
 \usepackage[landscape]{geometry}
 \usepackage{listings}
-\usepackage[hidelinks]{hyperref}
 
 \usepackage{gitinfo2}
 
@@ -21,7 +20,6 @@
 \usepackage{catchfile}
 \usepackage{ifluatex}
 \usepackage{ifplatform}
-\usepackage[normalem]{ulem}
 
 \usepackage{emoji}
 
@@ -141,7 +139,7 @@ showstringspaces=false
 \setlength{\columnsep}{2pt}
 
 \begin{center}
-     \Large{\textbf{Spack Cheat Sheet}} \\
+     \Large{\textbf{CMake Cheat Sheet}} \\
 \end{center}
 
 \section{Directories}
@@ -149,6 +147,7 @@ showstringspaces=false
 \bash{$tempdir/$user/spack-stage}    &  Built packages \\
 \bash{$spack/var/spack/cache} & Source files \\
 \bash{$spack/etc/spack/defaults/config.yaml} & Default configuration \\
+\bash{$home/.spack/packages.yaml} & List of compilers \\
 \bash{$home/.spack/packages.yaml} & External packages
 \end{tabular}
 The environment variable \bash{$user} is your username (moniker) and \bash{$tempdir} is the default temporary directory (usually \bash{tmp}. the default temporary directory can be changed by setting \bash{$TMP} pr \bash{$TMPDIR}.\\
@@ -163,30 +162,21 @@ The environment variable \bash{$user} is your username (moniker) and \bash{$temp
 \settowidth{\MyLen}{\texttt{letterpaper}/\texttt{a4paper} \ }
 \begin{lstlisting}[language=bash,style=mystyle]
 # Install Spack
-git clone --depth=2 
-		https://github.com/spack/spack.git
+git clone --branch=releases/v0.22 
+	https://github.com/spack/spack.git
 # Activate Spack
 . ./spack/share/spack/setup-env.sh
 # Run spack
-spack 
+spack
 \end{lstlisting}
-Please use \texttt{-b v1.0.1} to clone a specific release. If you use a different
+Please update \bash{v.022} with the latest release number. If you use a different
 shell and not bash change \bash{setup-env.sh} to your favorite bash.
-
-\subsection{Updating the build in packages}
-The built in packages are located here \url{https://github.com/spack/spack-packages}.
-\begin{lstlisting}[language=bash,style=mystyle]
-# pull the latest packages
-spack repo update
-# pull a specific commit
-spack repo update --commit 2bf4ab9585 builtin 
-\end{lstlisting}
-
 
 
 \subsection{Installation}
 \settowidth{\MyLen}{\texttt{multicol} }
 \begin{tabular}{@{}ll@{}}
+\bash{spack info --phased}    &  Build details \\
 \bash{spack install <name>} & Install package <name> \\
 \bash{spack install -j n} & Number of $n$ parallel jobs  \\
 \bash{spack install -v} & Verbose build output \\
@@ -215,17 +205,17 @@ To install a specific version of the package we use \bash{spack install wget@1.1
 \bash{spack compiler find} & FInd new compilers \\ 
 \bash{spack compiler info <name>} & Shows info 
 \end{tabular} \\
-If your favorite compiler is not available use \bash{spack install gcc@13.2.0}  or install \bash{spack install llvm@17} to install it. That takes a while and you might want to get a hot beverage \emoji{coffee}.
+If your favorite compiler is not available use \bash{spack install gcc@13.2.0}  or install \bash{spack install clang@17} to install it. That takes a while and you might want to get a hot beverage \emoji{coffee}.
 
 \subsection{Adding external packages}
 \settowidth{\MyLen}{\texttt{multicol} }
 \begin{tabular}{@{}ll@{}}
-\sout{\bash{spack external find openmpi}} & Search for openmp \\ 
-\sout{\bash{spack external find mpich}} & Search for mpich \\ 
+\bash{spack external find openmpi} & Search for openmp \\ 
+\bash{spack external find mpich} & Search for mpich \\ 
 \bash{spack external find cuda} & Search for CUDA  \\
 \bash{spack external find <name>} & Search for package <name>  \\
 \end{tabular} \\
-You can try to add system packages using \bash{spack external find python} or \bash{external find openssl}. Spack will use these packages and that can reduce the compilation time.  Note that finding MPI packages us currently broken in Spack 1.0.
+You can try to add system packages using \bash{spack external find python} or \bash{external find openssl}. Spack will use these packages and that can reduce the compilation time. 
 
 \subsection{Concretization}
 \settowidth{\MyLen}{\texttt{multicol} }
@@ -237,7 +227,7 @@ You can try to add system packages using \bash{spack external find python} or \b
 \bash{spack install kokkos ^cuda@12.4.1} & Use CUDA 12.4.1 \\ 
 \end{tabular} \\
 To build Kokkos 4.4  with CUDA support using CUDA 12.4.1 support with gcc 12.2.0 we could use
-\bash{spack install kokkos@4.4 +cuda cuda\_arch=80 \%gcc@12.2.0} \bash{ ^cuda@12.4.1}.
+\bash{spack install kokkos@4.4 +cuda ^cuda@12.4.1 \%gcc@12.2.0}.
 To list all available variants, we use \bash{spack info <name>}.
 \begin{lstlisting}[language=bash,style=mystyle]
 spack info hdf5
